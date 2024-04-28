@@ -8,91 +8,103 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Menu = void 0;
+exports.consultarUserRol = exports.consultarUser = exports.loginUser = exports.registrarUser = void 0;
 const rols_1 = require("./enum/rols");
+const menu_1 = require("./menu");
+const Logs_1 = require("./utils/Logs");
+const Questions_1 = require("./utils/Questions");
 const ServiceDB_1 = require("./utils/ServiceDB");
-const readline = require('readline');
+const colorts_1 = __importDefault(require("colorts"));
 const consultas = new ServiceDB_1.ServiceDB();
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-let question = "";
 const user1 = {
     username: "",
     password: "",
     nickname: "",
     rol: rols_1.Rol.User
 };
-const Menu = () => {
-    console.log("# Menú Interactivo");
-    console.log("1. Registrar Usuario");
-    console.log("2. Consultar por nickname");
-    console.log("3. Consultar Rol");
-    console.log("4. Salir");
-    rl.question('Selecciona una opcion: ', (opcion) => {
-        switch (opcion) {
-            case '1':
-                console.log(`opcion, ${opcion}!`);
-                registrarUser();
-                break;
-            case '2':
-                console.log(`opcion, ${opcion}!`);
-                break;
-            case '3':
-                console.log(`opcion, ${opcion}!`);
-                break;
-            case '4':
-                process.exit();
-                break;
-            default:
-                break;
-        }
-        rl.close();
-    });
-};
-exports.Menu = Menu;
-/* function solicitarInformacion() {
-    return new Promise((resolve, reject) => {
-      rl.question('Ingrese su nombre: ', (username:string) => {
-        rl.question('Ingrese su contraseña: ', (password:string) => {
-          rl.question('Ingrese su apodo (nickname): ', (nickname:string) => {
-            user1.username=username
-            user1.password=password
-            user1.nickname=nickname
-            resolve(user1);
-          });
-        });
-      });
-    });
-  } */
 const registrarUser = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('Por favor, ingrese la siguiente información:');
-    const usuario = yield solicitarInformacion();
-    console.log(usuario);
-    rl.close();
+    try {
+        user1.username = yield (0, Questions_1.questionUserName)();
+        user1.nickname = yield (0, Questions_1.questionNickName)();
+        user1.password = yield (0, Questions_1.questionPassword)();
+        const rol = yield (0, Questions_1.questionRol)();
+        if (rol == '1') {
+            user1.rol = rols_1.Rol.User;
+        }
+        else {
+            user1.rol = rols_1.Rol.Admin;
+        }
+        const result = yield consultas.registraruser(user1);
+        if (result.status == 'ok') {
+            (0, Logs_1.logsout)((0, colorts_1.default)(result.mensaje).green + "");
+            /* rl.close(); */
+            (0, menu_1.Menu)();
+        }
+    }
+    catch (error) {
+        (0, Logs_1.logsout)((0, colorts_1.default)(`Error: ${error}`).red + "");
+        (0, menu_1.Menu)();
+    }
 });
-// 1.Mostrar menu
-// 2. segun la opcion:
-// registrar->pedir información
-/*
-*/
-/* consultas.consultarUser("cami23").then((res) => {
-    console.log("Consulta:", res)
-}).catch ((error) => {
-    console.log(error)
-})
-
-
-consultas.registraruser(user1).then((res) => {
-    console.log(res)
-}).catch((error) => {
-    console.log(error)
-})
-
-function processData(data: string): void {
-    console.log("Consultado Rol:", data);
+exports.registrarUser = registrarUser;
+const loginUser = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let userNickmane = yield (0, Questions_1.questionNickName)();
+        let password = yield (0, Questions_1.questionPassword)();
+        const result = yield consultas.loginuser(userNickmane, password);
+        if (result.status == 'ok') {
+            (0, Logs_1.logsout)((0, colorts_1.default)(result.mensaje).green + "");
+            (0, menu_1.Menu)();
+        }
+        else {
+            (0, Logs_1.logsout)((0, colorts_1.default)(result.mensaje).green + "");
+            (0, menu_1.Menu)();
+        }
+    }
+    catch (error) {
+        (0, Logs_1.logsout)((0, colorts_1.default)(`Error: ${error}`).red + "");
+    }
+    /* rl.close(); */
+});
+exports.loginUser = loginUser;
+const consultarUser = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const nickname = yield (0, Questions_1.questionNickNameQuery)();
+        const result = yield consultas.consultarUser(nickname);
+        if (result) {
+            let user = result;
+            (0, Logs_1.logsout)('\n');
+            (0, Logs_1.logsout)((0, colorts_1.default)('/////////////////// Usuario encontrado ////////////////').yellow + "");
+            (0, Logs_1.logsout)("Nickname: " + (0, colorts_1.default)(user.nickname).green + "");
+            (0, Logs_1.logsout)("Username: " + (0, colorts_1.default)(user.username).green + "");
+            (0, Logs_1.logsout)("Rol: " + (0, colorts_1.default)(user.rol).green + "");
+            (0, menu_1.Menu)();
+        }
+    }
+    catch (error) {
+        (0, Logs_1.logsout)((0, colorts_1.default)(`Error: ${error}`).red + "");
+        (0, menu_1.Menu)();
+    }
+    /* rl.close(); */
+});
+exports.consultarUser = consultarUser;
+function queryData(data) {
+    (0, Logs_1.logsout)((0, colorts_1.default)('Consultado Rol:').green + data);
+    (0, menu_1.Menu)();
 }
-
-consultas.consultarRolByNicknameUsuario("cami23", processData) */
+const consultarUserRol = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const nickname = yield (0, Questions_1.questionNickNameQuery)();
+        consultas.consultarRolByNicknameUsuario(nickname, queryData);
+    }
+    catch (error) {
+        (0, Logs_1.logsout)((0, colorts_1.default)(`Error: ${error}`).red + "");
+        (0, menu_1.Menu)();
+    }
+    /* rl.close(); */
+});
+exports.consultarUserRol = consultarUserRol;

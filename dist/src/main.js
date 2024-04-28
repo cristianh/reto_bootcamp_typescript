@@ -1,4 +1,4 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const app_1 = require("./app");
-(0, app_1.Menu)();
+const menu_1 = require("./menu");
+(0, menu_1.Menu)();

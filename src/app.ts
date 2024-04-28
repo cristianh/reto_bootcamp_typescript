@@ -1,16 +1,14 @@
-import { Rol } from "./enum/rols";
+import { Rol } from './enum/rols';
+import { Menu } from "./menu";
 import { Person } from "./models/Person";
+import { logsout } from "./utils/Logs";
+import { questionUserName, questionNickName, questionPassword, questionNickNameQuery,questionRol } from "./utils/Questions";
 import { ServiceDB } from "./utils/ServiceDB";
-const readline = require('readline')
+import colors from 'colorts';
+
+
 const consultas: ServiceDB = new ServiceDB();
 
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-})
-
-let  question:string=""
 
 const user1: Person = {
     username: "",
@@ -18,91 +16,86 @@ const user1: Person = {
     nickname: "",
     rol: Rol.User
 }
-export const Menu = () => {
-    console.log("# Menú Interactivo");
-    console.log("1. Registrar Usuario");
-    console.log("2. Consultar por nickname");
-    console.log("3. Consultar Rol");
-    console.log("4. Salir");
-    rl.question('Selecciona una opcion: ', (opcion: string) => {
 
-        switch (opcion) {
-            case '1':
-                console.log(`opcion, ${opcion}!`);
-                registrarUser()
-                
-                break;
-            case '2':
-                console.log(`opcion, ${opcion}!`);
-                break;
-            case '3':
-                console.log(`opcion, ${opcion}!`);
-                break;
-            case '4':
-                process.exit()
-                break;
-
-            default:
-                break;
+export const registrarUser = async () => {
+    try {
+        user1.username = await questionUserName();
+        user1.nickname = await questionNickName();
+        user1.password = await questionPassword();
+        const rol = await questionRol();
+        if(rol=='1'){
+            user1.rol=Rol.User
+        }else{
+            user1.rol=Rol.Admin
         }
-        rl.close();
-    });
+        const result = await consultas.registraruser(user1)
+        if (result.status == 'ok') {
+            logsout(colors(result.mensaje).green + "")
+            /* rl.close(); */
+            Menu()
+        }
+    } catch (error) {
+        logsout(colors(`Error: ${error}`).red + "")
+        Menu()
+    }
+    
 }
 
-/* function solicitarInformacion() {
-    return new Promise((resolve, reject) => {
-      rl.question('Ingrese su nombre: ', (username:string) => {
-        rl.question('Ingrese su contraseña: ', (password:string) => {
-          rl.question('Ingrese su apodo (nickname): ', (nickname:string) => {
-            user1.username=username
-            user1.password=password
-            user1.nickname=nickname
-            resolve(user1);
-          });
-        });
-      });
-    });
-  } */
-
-const registrarUser = async () =>{
-    console.log('Por favor, ingrese la siguiente información:');
-    const usuario = await solicitarInformacion();
-    console.log(usuario);
-    rl.close();
+export const loginUser = async () => {
+    try {
+        let userNickmane = await questionNickName();
+        let password = await questionPassword();
+        const result = await consultas.loginuser(userNickmane, password)
+        if (result.status == 'ok') {
+            logsout(colors(result.mensaje).green + "")
+            Menu()
+        }else{
+            logsout(colors(result.mensaje).green + "")
+            Menu()
+        }
+    } catch (error) {
+        logsout(colors(`Error: ${error}`).red + "")
+    }
+    /* rl.close(); */
 }
 
 
 
-
-
-
-
-
-
-
-// 1.Mostrar menu
-// 2. segun la opcion:
-// registrar->pedir información
-
-/*   
-*/
-
-
-/* consultas.consultarUser("cami23").then((res) => {
-    console.log("Consulta:", res)
-}).catch ((error) => {
-    console.log(error)
-})
-
-
-consultas.registraruser(user1).then((res) => {
-    console.log(res)
-}).catch((error) => {
-    console.log(error)
-})
-
-function processData(data: string): void {
-    console.log("Consultado Rol:", data);
+export const consultarUser = async () => {
+    try {
+        const nickname = await questionNickNameQuery();
+        const result = await consultas.consultarUser(nickname)
+        if (result) {
+            let user:Person = result as Person;
+            logsout('\n')
+            logsout(colors('/////////////////// Usuario encontrado ////////////////').yellow + ""); 
+            logsout("Nickname: "+colors(user.nickname).green + "")
+            logsout("Username: "+colors(user.username).green + "")
+            logsout("Rol: "+colors(user.rol).green + "")            
+            Menu()
+        }
+    } catch (error) {
+        logsout(colors(`Error: ${error}`).red + "")
+        Menu()
+    }
+    /* rl.close(); */
 }
 
-consultas.consultarRolByNicknameUsuario("cami23", processData) */
+function queryData(data: string): void {    
+    logsout(colors('Consultado Rol:').green+ data);
+     Menu()
+}
+
+export const consultarUserRol = async () => {
+    try {
+        const nickname = await questionNickNameQuery();
+       consultas.consultarRolByNicknameUsuario(nickname, queryData)
+        
+    } catch (error) {
+        logsout(colors(`Error: ${error}`).red + "")
+        Menu()
+    }
+    /* rl.close(); */
+}
+
+

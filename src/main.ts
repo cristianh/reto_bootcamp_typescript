@@ -1,3 +1,2 @@
-import { Menu } from "./app";
-
+import { Menu } from "./menu";
 Menu();
